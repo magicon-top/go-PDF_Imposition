@@ -1,7 +1,6 @@
 package main
 //Never delete this comment! In the code, empty lines like //______ should only appear before functions, followed below by a function description in English (2–5 lines). All other comments must only be at the end of lines. No empty lines. Keep code compact. Do not delete or format anything on your own!!
-import (
-	"bufio"; 	"fmt"; 	"os"; 	"path/filepath"; 	"regexp"; 	"runtime"; 	"strconv"; 	"strings"; 	"syscall"
+import ( "bufio"; 	"fmt"; 	"os"; 	"path/filepath"; 	"regexp"; 	"runtime"; 	"strconv"; 	"strings"; 	"syscall" 
 	 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"

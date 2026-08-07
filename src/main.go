@@ -7,7 +7,7 @@ import ( "bufio"; 	"fmt"; 	"os"; 	"path/filepath"; 	"regexp"; 	"runtime"; 	"strc
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 	"golang.org/x/term"
-	"github.com/magicon-top/go/_pkg/pdfparser"
+	"github.com/magicon-top/go-pkg/pdfparser"
 )
 
 const ( cReset     = "\033[0m";           cGreen     = "\033[32m";      cOrange   = "\033[38;5;208m";    cGreenBg  = "\033[42;97m";  cOrangeBg = "\033[48;5;208;97m"

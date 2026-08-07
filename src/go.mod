@@ -1,11 +1,12 @@
-module PDF-Imposition
+module PDF_Imposition
 
 go 1.26.5
 
-replace github.com/pdfcpu/pdfcpu => github.com/magicon-top/go/_pkg/pdfcpu v0.13.0
+//replace github.com/pdfcpu/pdfcpu => github.com/magicon-top/go-pkg/pdfcpu v0.13.0
+//replace github.com/pdfcpu/pdfcpu => ./../../pkg/pdfcpu
 
 require (
-	github.com/magicon-top/go/_pkg/pdfparser v0.15.0
+	github.com/magicon-top/go-pkg/pdfparser v0.13.0
 	github.com/pdfcpu/pdfcpu v0.13.0
 	golang.org/x/term v0.45.0
 )

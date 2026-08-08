@@ -10,6 +10,8 @@ github.com/magicon-top/go-pkg/pdfparser v0.0.0-20260807115130-9b2725adbf03 h1:ii
 github.com/magicon-top/go-pkg/pdfparser v0.0.0-20260807115130-9b2725adbf03/go.mod h1:BzBLH6JRO/5PrKbCm6H/v03BTuxeTfPUf7wiVKzyc5c=
 github.com/mattn/go-runewidth v0.0.27 h1:Feg/Oou5zI/wnpgDF6omIU0OokC9GxLC/WRknhVlIR0=
 github.com/mattn/go-runewidth v0.0.27/go.mod h1:3qAiGCV4Koz/yuveO58qUefmUTRm8r0IGEXZ9jeHp/8=
+github.com/pdfcpu/pdfcpu v0.13.0 h1:7maI7K0w4pJsgX9u7eeCsK4+An/+xEVkJwAwyd7/n3M=
+github.com/pdfcpu/pdfcpu v0.13.0/go.mod h1:Pz8elxcY3MHc3W65HeeDbuSBvsq+OK+enMVdBsvKCj4=
 github.com/phpdave11/gofpdi v1.0.14-0.20211212211723-1f10f9844311 h1:zyWXQ6vu27ETMpYsEMAsisQ+GqJ4e1TPvSNfdOPF0no=
 github.com/phpdave11/gofpdi v1.0.14-0.20211212211723-1f10f9844311/go.mod h1:vBmVV0Do6hSBHC8uKUQ71JGW+ZGQq74llk/7bXwjDoI=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

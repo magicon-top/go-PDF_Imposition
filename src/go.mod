@@ -6,7 +6,7 @@ replace github.com/pdfcpu/pdfcpu => github.com/magicon-top/go-pkg/pdfcpu v0.0.0-
 
 require (
 	github.com/magicon-top/go-pkg/pdfparser v0.0.0-20260807115130-9b2725adbf03
-	github.com/pdfcpu/pdfcpu v0.14.0
+	github.com/pdfcpu/pdfcpu v0.13.0
 	golang.org/x/term v0.45.0
 )
 

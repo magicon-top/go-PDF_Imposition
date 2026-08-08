@@ -6,6 +6,11 @@ import ( "bufio"; 	"fmt"; 	"os"; 	"path/filepath"; 	"regexp"; 	"runtime"; 	"strc
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+
+//	"github.com/magicon-top/go-pkg/pdfcpu/pkg/api"
+//	"github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu"
+//	"github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu/model"
+//	"github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu/types"
 	"golang.org/x/term"
 	"github.com/magicon-top/go-pkg/pdfparser"
 )

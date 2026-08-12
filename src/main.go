@@ -275,16 +275,19 @@ func main() { // Main application entry point
     conf := model.NewDefaultConfiguration() // Configure pdfcpu
     conf.Unit, conf.Optimize = types.MILLIMETRES, false // Set millimeters and disable optimization
 
-    textCMYK := "" // Variable for CMYK marking text
-    if nameStr, ok := configStr["name"]; ok && nameStr != "" {
-        textCMYK = nameStr
-    } // Read name variable from 0.txt
-
-    tempCmykFile := "temp_cmyk_global.pdf" // Shared temp file for CMYK stamp
-    hasCmykStamp := false
-    if cmykPdfBytes, cmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", textCMYK, 16, 70, 200, -90, "FFFFFFFF"); cmykErr == nil && len(cmykPdfBytes) > 0 {
-        if err := os.WriteFile(tempCmykFile, cmykPdfBytes, 0644); err == nil {
-            hasCmykStamp = true
+    var nameBase string // Base name string without sheet count
+    var sheetCounts []string // Sheet counts per page
+    var extraField string // Extra field for the 5th parameter
+    if nameStr, ok := configStr["name"]; ok && nameStr != "" { // Read name variable from 0.txt
+        parts := strings.Split(nameStr, "/") // Split by slash
+        if len(parts) >= 4 { // Check if 4 fields are present
+            nameBase = fmt.Sprintf("Заказ N%s / %s / Штамп %s", strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), strings.TrimSpace(parts[2])) // Format first 3 fields
+            for _, count := range strings.Split(parts[3], ",") { // Split 4th field by comma
+                sheetCounts = append(sheetCounts, strings.TrimSpace(count)) // Add to counts slice
+            }
+            if len(parts) >= 5 { extraField = strings.TrimSpace(parts[4]) } // Extract 5th field if present
+        } else {
+            nameBase = nameStr // Fallback if format is not met
         }
     }
 
@@ -345,13 +348,28 @@ func main() { // Main application entry point
                     }
                 }
             }
-            if hasCmykStamp { // Apply CMYK marking if temp file exists
-                cmykOffsetStr := "pos:bl, off:0 0, rot:0, scale:1 abs" // Specify rot:0 to prevent pdfcpu auto-rotation
-                wmCmyk, err := pdfcpu.ParsePDFWatermarkDetails(tempCmykFile, cmykOffsetStr, true, types.MILLIMETRES) // Parse CMYK watermark parameters
-                if err == nil { _ = pdfcpu.AddWatermarks(ctx, types.IntSet{targetPage: true}, wmCmyk)
-                } // Apply CMYK text to current page
+            if nameBase != "" { // Apply parsed name stamp
+                pageTextCMYK := nameBase // Initialize with base name
+                if len(sheetCounts) > 0 { // Check if counts are available
+                    countStr := sheetCounts[0] // Default to first count
+                    if pageIdx < len(sheetCounts) { // If specific count exists for page
+                        countStr = sheetCounts[pageIdx]
+                    }
+                    pageTextCMYK += fmt.Sprintf(" / %s листов чистыми", countStr) // Append sheet count
+                }
+                if extraField != "" { pageTextCMYK += " / " + extraField } // Append unchanged 5th field
+                if cmykPdfBytes, cmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageTextCMYK, 16, 70, 200, -90, "FFFFFFFF"); cmykErr == nil && len(cmykPdfBytes) > 0 { // Generate bytes
+                    tempNameCmyk := fmt.Sprintf("temp_name_page_%d.pdf", targetPage) // Temp file name
+                    if err := os.WriteFile(tempNameCmyk, cmykPdfBytes, 0644); err == nil { // Write to disk
+                        cmykOffsetStr := "pos:bl, off:0 0, rot:0, scale:1 abs" // Offset parameters
+                        if wmNameCmyk, err := pdfcpu.ParsePDFWatermarkDetails(tempNameCmyk, cmykOffsetStr, true, types.MILLIMETRES); err == nil { // Parse details
+                            _ = pdfcpu.AddWatermarks(ctx, types.IntSet{targetPage: true}, wmNameCmyk) // Add watermark
+                        }
+                        _ = os.Remove(tempNameCmyk) // Clean up
+                    }
+                }
             }
-            pageCmykText := fmt.Sprintf("Спуск %d  / ", targetPage) // Format per-page imposition CMYK text
+            pageCmykText := fmt.Sprintf("Спуск %d /", targetPage) // Format per-page imposition CMYK text
             if pageCmykBytes, pageCmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageCmykText, 16, 70, 175, -90, "FFFFFFFF"); pageCmykErr == nil && len(pageCmykBytes) > 0 { // Generate CMYK text PDF bytes for current page
                 tempPageCmyk := fmt.Sprintf("temp_cmyk_page_%d.pdf", targetPage) // Temporary file name for per-page CMYK watermark
                 if err := os.WriteFile(tempPageCmyk, pageCmykBytes, 0644); err == nil { // Write per-page CMYK PDF to disk
@@ -368,10 +386,6 @@ func main() { // Main application entry point
             fmt.Printf("Error saving output PDF %s: %v\n", resultFile, err)
         } // Save generated file
         cleanupTempFiles() // Force cleanup of temporary pdfcpu .tmp files after processing each file
-    }
-
-    if hasCmykStamp {
-        _ = os.Remove(tempCmykFile) // Explicitly remove shared temp CMYK file
     }
 
     fmt.Printf("\n\n%s0.pdf%s: Bottom-left die corner: X = %s%.2f%s mm, Y = %s%.2f%s mm | Offsets between dies: X: %s%.2f%s mm, Y: %s%.2f%s mm\n", cGreen, cReset, cOrange, x, cReset, cOrange, y, cReset, cOrange, w, cReset, cOrange, h, cReset) // Print coordinates and sizes with color formatting

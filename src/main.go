@@ -222,14 +222,13 @@ func main() { // Main application entry point
                 } // Limit to list length
                 pageChunk := blockItems[p:pageEnd] // Elements chunk for page
                 var rows [][]StampItem             // Slice of page rows
-                for i := 0; i < len(pageChunk); i += numX { // Slice into rows of numX
-                    end := i + numX // Calculate row end
-                    if end > len(pageChunk) {
-                        end = len(pageChunk)
-                    } // Limit to chunk length
-                    rows = append(rows, pageChunk[i:end]) // Add row
-                }
-                pages = append(pages, rows) // Add page to layout
+                for r := 0; r < numY; r++ { rows = append(rows, []StampItem{}) } // Initialize empty rows
+                for i, item := range pageChunk { rows[numY-1-(i%numY)] = append(rows[numY-1-(i%numY)], item) } // Fill up then right
+                var actualRows [][]StampItem // Slice of non-empty rows
+                for _, r := range rows {
+                    if len(r) > 0 { actualRows = append(actualRows, r) }
+                } // Remove empty rows if any
+                pages = append(pages, actualRows) // Add page to layout
             }
         }
     }

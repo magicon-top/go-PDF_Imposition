@@ -1,34 +1,24 @@
 package main
 //Never delete this comment! In the code, empty lines like //______ should only appear before functions, followed below by a function description in English (2–5 lines). All other comments must only be at the end of lines. No empty lines. Keep code compact. Do not delete or format anything on your own!!
-import ( "bufio";   "fmt";  "os";   "path/filepath";    "regexp";   "runtime";  "strconv";  "strings";  "syscall" 
-     
+import ( "bufio";   "fmt";  "os";   "path/filepath";    "regexp";   "runtime";  "strconv";  "strings";  "syscall"
     "github.com/pdfcpu/pdfcpu/pkg/api"
     "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
     "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
     "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-
-//  "github.com/magicon-top/go-pkg/pdfcpu/pkg/api"
-//  "github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu"
-//  "github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu/model"
-//  "github.com/magicon-top/go-pkg/pdfcpu/pkg/pdfcpu/types"
     "golang.org/x/term"
     "github.com/magicon-top/go-pkg/pdfparser"
 )
-
 const ( cReset     = "\033[0m";           cGreen     = "\033[32m";      cOrange   = "\033[38;5;208m";    cGreenBg  = "\033[42;97m";  cOrangeBg = "\033[48;5;208;97m"
 )
-
 var (
     reDigit       = regexp.MustCompile(`\d+`)
     reGroup       = regexp.MustCompile(`\(([^)]+)\)\*(\d+)`)
     reLayoutChars = regexp.MustCompile(`^[0-9()+\-* \t]+$`)
 )
-
 type StampItem struct {
     Page string
     Rot  int
 } // Structural element: page number and rotation angle
-
 // __________________________________________________
 // Enables virtual terminal processing for ANSI color support in Windows console.
 // Checks if running on Windows and sets the ENABLE_VIRTUAL_TERMINAL_PROCESSING flag.
@@ -41,7 +31,6 @@ func enableVirtualTerminal() { // Enable ANSI color support in Windows console
         }
     }
 }
-
 // __________________________________________________
 // Cleans up temporary pdfcpu files left in the system Temp folder.
 // Searches for files matching the pdfcpu pattern and removes them.
@@ -56,7 +45,6 @@ func cleanupTempFiles() { // Clean up temporary files left by pdfcpu in system T
         _ = os.Remove(f)
     } // Delete found temporary files
 }
-
 // __________________________________________________
 // Validates the syntax of the configuration file 0.txt.
 // Checks layout format, line structures, key-value syntax, and bracket balance.
@@ -80,7 +68,6 @@ func validateConfigFile(filePath string) error { // Validate configuration 0.txt
             } // Key format error
             continue // Proceed to next line, any characters after '=' are allowed
         }
-
         if !reLayoutChars.MatchString(line) {
             return fmt.Errorf("line %d contains invalid characters (letters, dots, etc.): %s", lineNum, line)
         } // Validate layout line syntax
@@ -105,7 +92,6 @@ func validateConfigFile(filePath string) error { // Validate configuration 0.txt
     }
     return scanner.Err() // Return possible scanning errors
 }
-
 // __________________________________________________
 // Main entry point for processing PDF files and creating imposition layouts.
 // Reads parameters, calculates coordinates, parses target PDFs, and applies watermarks.
@@ -146,23 +132,20 @@ func main() { // Main application entry point
         return
     } // Exit if object not found
     baseX, baseY, width, height := x, y, w, h // Save base metrics
+    objX, objY, _, _, _, _, _, _, _ := pdfparser.FindLowestLeftQurve3(zeroPdfBytes, 1, "*", "*") // Find coordinates of any lowest object
     config := make(map[string]float64)        // Configuration parameters map
     configStr := make(map[string]string)      // String configuration parameters map
     var pages [][][]StampItem                 // 3D slice for pages, rows, and elements
-    
     type RawBlock []string        // Type for raw block of lines
     var rawBlocks []RawBlock      // List of raw blocks
-
     err = func() error { // Read and parse 0.txt in isolated scope to release file handle immediately
         file, err := os.Open("0.txt") // Reopen 0.txt for parsing
         if err != nil {
             return err
         } // Return open error
         defer file.Close() // Close 0.txt file on exit from closure
-
         scanner := bufio.NewScanner(file) // Initialize configuration scanner
         var currentRawBlock RawBlock      // Current forming raw block
-
         for scanner.Scan() { // Read configuration line by line
             line := strings.TrimSpace(scanner.Text()) // Clean current line
             if line == "" || strings.HasPrefix(line, "#") { // Check for empty lines/comments
@@ -172,7 +155,6 @@ func main() { // Main application entry point
                 } // Finalize current block
                 continue // Proceed to next line
             }
-
             if strings.Contains(line, "=") { // Parse parameters with assignment
                 parts := strings.SplitN(line, "=", 2) // Split key and value
                 key := strings.TrimSpace(parts[0])
@@ -194,7 +176,6 @@ func main() { // Main application entry point
         waitExit()
         return
     } // Exit on read error
-
     numX, numY := numXcalc, numYcalc // Read layout grid
     if numX <= 0 {      numX = 4    } // Default numX value
     if numY <= 0 {      numY = 4    } // Default numY value
@@ -205,7 +186,7 @@ func main() { // Main application entry point
             line = reGroup.ReplaceAllStringFunc(line, func(match string) string { // Expand group multipliers
                 submatches := reGroup.FindStringSubmatch(match)                    // Extract contents and multiplier
                 inside, multiplier := strings.TrimSpace(submatches[1]), submatches[2] // Separate inner elements
-                var expanded []string                                                 // Expanded strings list
+                var expanded []string                                              // Expanded strings list
                 for _, item := range strings.Fields(inside) {
                     expanded = append(expanded, fmt.Sprintf("%s*%s", item, multiplier))
                 } // Apply multiplier to elements
@@ -252,7 +233,6 @@ func main() { // Main application entry point
             }
         }
     }
-
     neededPages := len(pages) // Total required imposition pages
     if neededPages == 0 {   fmt.Printf("No page blocks found in 0.txt\n")
         waitExit();         return
@@ -271,10 +251,9 @@ func main() { // Main application entry point
     if len(pdfFiles) == 0 {         fmt.Printf("No matching PDF files found for processing\n")
         waitExit();         return
     } // Exit if no matching PDFs exist
-    gap := gapCalc                           // Inter-column gap
+    gap := gapCalc                                 // Inter-column gap
     conf := model.NewDefaultConfiguration() // Configure pdfcpu
     conf.Unit, conf.Optimize = types.MILLIMETRES, false // Set millimeters and disable optimization
-
     var nameBase string // Base name string without sheet count
     var sheetCounts []string // Sheet counts per page
     var extraField string // Extra field for the 5th parameter
@@ -290,12 +269,10 @@ func main() { // Main application entry point
             nameBase = nameStr // Fallback if format is not met
         }
     }
-
     inFiles := make([]string, neededPages)
     for i := range inFiles {
         inFiles[i] = "0.pdf"
     } // Reusable substrate array
-
     for _, pdfFileName := range pdfFiles { // Loop through each PDF file
         fmt.Printf("\n%s%s%s :\n", cGreen, pdfFileName, cReset) // Highlight current file name in green
         targetPdfBytes, err := os.ReadFile(pdfFileName)       // Read file into memory
@@ -307,13 +284,12 @@ func main() { // Main application entry point
         targetPdfBytes = nil // Free memory reference for GC
         if err != nil { // Bleed detection error
             fmt.Printf("Error getting bleed for %s%s%s: %v\n", cGreen, pdfFileName, cReset, err) // Print Bleed error
-            bLeft, bRight, bTop, bBottom = 0, 0, 0, 0                                             // Reset values to zero
+            bLeft, bRight, bTop, bBottom = 0, 0, 0, 0                                              // Reset values to zero
         } else {
             fmt.Printf("Bleeds: L=%s%.2f%s, R=%s%.2f%s, T=%s%.2f%s, B=%s%.2f%s mm\n", cOrange, bLeft, cReset, cOrange, bRight, cReset, cOrange, bTop, cReset, cOrange, bBottom, cReset)
         } // Output Bleed info with orange highlighted values
         baseName := strings.TrimSuffix(pdfFileName, filepath.Ext(pdfFileName)) // File name without extension
-        resultFile := baseName + "_SPUSK.pdf"                                 // Build result file name
-
+        resultFile := baseName + "_SPUSK.pdf"                                  // Build result file name
         if err = api.MergeCreateFile(inFiles, resultFile, false, conf); err != nil {
             fmt.Printf("Error building base result PDF for %s: %v\n", pdfFileName, err)
             continue
@@ -322,7 +298,6 @@ func main() { // Main application entry point
         if err != nil {     fmt.Printf("Error loading base result PDF into memory for %s: %v\n", resultFile, err)
             continue
         } // Skip on context read error
-
         for pageIdx, digitRows := range pages { // Iterate imposition pages
             targetPage, totalRows := pageIdx+1, len(digitRows) // Target page number and total rows
             fmt.Printf("\n%s      Page %d          %s\n", cGreenBg, targetPage, cReset) // Output log with orange page numbers and angles
@@ -358,7 +333,7 @@ func main() { // Main application entry point
                     pageTextCMYK += fmt.Sprintf(" / %s листов чистыми", countStr) // Append sheet count
                 }
                 if extraField != "" { pageTextCMYK += " / " + extraField } // Append unchanged 5th field
-                if cmykPdfBytes, cmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageTextCMYK, 16, 70, 200, -90, "FFFFFFFF"); cmykErr == nil && len(cmykPdfBytes) > 0 { // Generate bytes
+                if cmykPdfBytes, cmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageTextCMYK, 16, objX+10, objY+200, -90, "FFFFFFFF"); cmykErr == nil && len(cmykPdfBytes) > 0 { // Generate bytes
                     tempNameCmyk := fmt.Sprintf("temp_name_page_%d.pdf", targetPage) // Temp file name
                     if err := os.WriteFile(tempNameCmyk, cmykPdfBytes, 0644); err == nil { // Write to disk
                         cmykOffsetStr := "pos:bl, off:0 0, rot:0, scale:1 abs" // Offset parameters
@@ -370,7 +345,7 @@ func main() { // Main application entry point
                 }
             }
             pageCmykText := fmt.Sprintf("Спуск %d /", targetPage) // Format per-page imposition CMYK text
-            if pageCmykBytes, pageCmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageCmykText, 16, 70, 175, -90, "FFFFFFFF"); pageCmykErr == nil && len(pageCmykBytes) > 0 { // Generate CMYK text PDF bytes for current page
+            if pageCmykBytes, pageCmykErr := pdfparser.GenerateCMYKTextPDFBytes("0.ttf", pageCmykText, 16, objX+10, objY+175, -90, "FFFFFFFF"); pageCmykErr == nil && len(pageCmykBytes) > 0 { // Generate CMYK text PDF bytes for current page
                 tempPageCmyk := fmt.Sprintf("temp_cmyk_page_%d.pdf", targetPage) // Temporary file name for per-page CMYK watermark
                 if err := os.WriteFile(tempPageCmyk, pageCmykBytes, 0644); err == nil { // Write per-page CMYK PDF to disk
                     cmykOffsetStr := "pos:bl, off:0 0, rot:0, scale:1 abs" // Watermark positioning parameters
@@ -381,20 +356,17 @@ func main() { // Main application entry point
                 }
             }
         }
-
         if err = api.WriteContextFile(ctx, resultFile); err != nil {
             fmt.Printf("Error saving output PDF %s: %v\n", resultFile, err)
         } // Save generated file
         cleanupTempFiles() // Force cleanup of temporary pdfcpu .tmp files after processing each file
     }
-
     fmt.Printf("\n\n%s0.pdf%s: Bottom-left die corner: X = %s%.2f%s mm, Y = %s%.2f%s mm | Offsets between dies: X: %s%.2f%s mm, Y: %s%.2f%s mm\n", cGreen, cReset, cOrange, x, cReset, cOrange, y, cReset, cOrange, w, cReset, cOrange, h, cReset) // Print coordinates and sizes with color formatting
     fmt.Printf("Number of dies X-Y:  %s%d%s X %s%d%s | Central gutter gap: X: %s%.2f%s mm\n", cOrange, numXcalc, cReset, cOrange, numYcalc, cReset, cOrange, gapCalc, cReset)
     cleanupTempFiles() // Final Temp cleanup before exit
     fmt.Println("\nDone!")
     waitExit() // Display completion and pause
 }
-
 // __________________________________________________
 // Pauses the console output and waits for key press before exiting.
 // Uses terminal raw mode or fallback standard input reading across platforms.

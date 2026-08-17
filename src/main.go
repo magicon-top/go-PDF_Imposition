@@ -330,7 +330,7 @@ func main() { // Main application entry point
                 mid := len(row) / 2 // Middle of row for gap offset
                 for colIdx, item := range row { // Iterate row columns
                     stampFile := fmt.Sprintf("%s:%s", pdfFileName, item.Page) // Reference to source sheet and page
-                    fmt.Printf("%s%s%s-%s%d%s\t", cOrange, item.Page, cReset, cReset, item.Rot, cReset) // Log page numbers and angles
+                    fmt.Printf("%s%s%s %s%d%s\t", cOrange, item.Page, cReset, cReset, item.Rot, cReset) // Log page numbers and angles
                     calcX := float64(colIdx)*width + baseX // Calculate X position
                     if colIdx >= mid {
                         calcX += gap
